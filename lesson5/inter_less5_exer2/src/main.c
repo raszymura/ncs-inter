@@ -11,7 +11,7 @@
 #include <zephyr/drivers/display.h>
 
 /* STEP 7 - Include the header file for the ili_screen_controller module*/
-
+#include "ili_screen_controller.h"
 
 LOG_MODULE_REGISTER(Lesson5_Exercise2, LOG_LEVEL_INF);
 
@@ -46,7 +46,14 @@ int set_background_color(const struct device *screen, struct display_capabilitie
 	buf_desc.pitch = cap.x_resolution;
 	
 	/* STEP 8 - Write background values to screen (row by row) and free buffer */
-	
+	for (int idx = 0; idx < cap.y_resolution; idx += h_step) {	
+		ret = screen_write(screen, 0, idx, &buf_desc, buf);
+		if (ret < 0){
+			return ret;
+		}
+	}
+	k_free(buf);
+
 	return 0;
 }
 
@@ -75,7 +82,16 @@ int draw_diagonal_line(const struct device *screen, uint8_t x, uint8_t y, uint8_
 
 	LOG_INF("Displaying diagonal line, starting pixel (x, y) = %2d, %2d", x, y);
 	/* STEP 9 - Display a diagonal line given a starting location (x,y) */
-	
+	for (int i = 0; i < nump; i++)		
+	{		
+		err = screen_write(screen, x++, y++, &buf_desc, buf);
+		if (er < 0) {
+			return err;
+		}
+		display_blanking_off(screen);
+		k_msleep(DELAY);
+	}
+
 	k_free(buf);
 	LOG_INF("Last pixel (x, y)= %2d, %2d", x, y);
 	return 0;
@@ -107,6 +123,16 @@ int draw_lines(const struct device *screen, uint8_t x, uint8_t y, uint8_t dy, ui
 	
 	LOG_INF("Displaying series of lines (1 line at a time), starting line (x, y) = %2d, %2d", x, y);
 	/* STEP 10 - Display multiple straight lines with screen_write() */
+	for (int i = 0; i < numl; i++)
+	{		
+		err = screen_write(screen, x, y, &buf_desc, buf);
+		if (err < 0) {
+			return err;
+		}
+		y -= dy;				
+		display_blanking_off(screen);
+		k_msleep(DELAY);
+	}
 	
 	k_free(buf);
 	LOG_INF("Last line (x, y)= %2d, %2d", x, y);
@@ -139,7 +165,10 @@ int draw_box(const struct device *screen, uint8_t x, uint8_t y, uint8_t w, uint8
 
 	LOG_INF("Displaying a rectangular box, top left corner (x,y) = %2d, %2d", x, y);
 	/* STEP 11 - Draw a  rectangular box, given the top left hand corner (x,y) */
-	
+	err = screen_write(screen, x, y, &buf_desc, buf);
+	if (err < 0) {
+		return err;
+	}
 
 	k_free(buf);
 	LOG_INF("Bottom right corner (x, y) of box = %2d, %2d", x+w, y+h);
@@ -161,7 +190,11 @@ int main(void)
 	uint8_t num_lines = 25;																				
 
 	/* STEP 12 - Obtain the screen node from device tree */
-	
+	screen = DEVICE_DT_GET(DT_NODELABEL(ili9340));
+	if (!device_is_ready(screen)) {
+		LOG_ERR("Device %s not found, aborting", screen->name);
+		return 0;
+	}
 
 	/* Setting orientation 1 (W=320 H=240) */
 	err = display_set_orientation(screen, 1);
