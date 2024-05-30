@@ -8,3 +8,8 @@
 };
 
 /* Step 8.1 - Add external flash */
+/ {
+	chosen {
+		nordic,pm-ext-flash = &mx25r64;
+	};
+};
