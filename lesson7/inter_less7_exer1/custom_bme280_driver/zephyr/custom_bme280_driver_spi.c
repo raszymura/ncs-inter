@@ -431,7 +431,17 @@ static const struct custom_bme280_driver_api custom_bme280_api_funcs = {
 	}
 
 /* STEP 5.1 - Define a device driver instance */
-
+#define CUSTOM_BME280_DEFINE(inst)					\
+	static struct bme280_data bme280_data_##inst;			\
+	static const struct custom_bme280_config custom_bme280_config_##inst = BME280_CONFIG_SPI(inst);	\
+	DEVICE_DT_INST_DEFINE(inst,				\
+				init,				\
+				NULL,				\
+				&bme280_data_##inst,		\
+				&custom_bme280_config_##inst,	\
+				POST_KERNEL, 			\
+				CONFIG_DRIVER_INIT_PRIORITY, 	\
+				&custom_bme280_api_funcs);
 
 /* STEP 5.2 - Create the struct device for every status "okay" node in the devicetree */
-
+DT_INST_FOREACH_STATUS_OKAY(CUSTOM_BME280_DEFINE)
